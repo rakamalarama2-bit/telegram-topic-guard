@@ -18,15 +18,15 @@ async def lock_topics(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = message.message_thread_id
     user_id = message.from_user.id
 
-    # Only act inside locked topics
+    # Only apply in locked topics
     if thread_id not in [POLICY_TOPIC_ID, HOWTOPLAY_TOPIC_ID, ANNOUNCEMENT_TOPIC_ID]:
         return
 
     try:
         member = await context.bot.get_chat_member(chat_id, user_id)
 
-        # Allow admins and owner
-        if member.status in ["administrator", "creator"]:
+        # Allow owner and admins
+        if member.status in ["creator", "administrator"]:
             return
 
         # Delete normal member messages
