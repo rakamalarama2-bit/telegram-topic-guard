@@ -4,13 +4,9 @@ from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTyp
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# Locked Topics
 POLICY_TOPIC_ID = 6
 HOWTOPLAY_TOPIC_ID = 12
 ANNOUNCEMENT_TOPIC_ID = 19
-
-# Allowed user
-ALLOWED_USERNAME = "FredReuss"
 
 
 async def lock_topics(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -18,14 +14,17 @@ async def lock_topics(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not message:
         return
 
+    chat_id = message.chat_id
     user = message.from_user
     thread_id = message.message_thread_id
 
-    # Allow FredReuss to post anywhere
-    if user.username and user.username.lower() == ALLOWED_USERNAME.lower():
-        return
+    # Check if user is admin
+    member = await context.bot.get_chat_member(chat_id, user.id)
 
-    # Lock specific topics
+    if member.status in ["administrator", "creator"]:
+        return  # allow admins
+
+    # Delete member messages in locked topics
     if thread_id in [POLICY_TOPIC_ID, HOWTOPLAY_TOPIC_ID, ANNOUNCEMENT_TOPIC_ID]:
         try:
             await message.delete()
