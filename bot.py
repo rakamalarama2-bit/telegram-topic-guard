@@ -15,21 +15,25 @@ async def lock_topics(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     chat_id = message.chat_id
-    user = message.from_user
     thread_id = message.message_thread_id
+    user_id = message.from_user.id
 
-    # Check if user is admin
-    member = await context.bot.get_chat_member(chat_id, user.id)
+    # Only act inside locked topics
+    if thread_id not in [POLICY_TOPIC_ID, HOWTOPLAY_TOPIC_ID, ANNOUNCEMENT_TOPIC_ID]:
+        return
 
-    if member.status in ["administrator", "creator"]:
-        return  # allow admins
+    try:
+        member = await context.bot.get_chat_member(chat_id, user_id)
 
-    # Delete member messages in locked topics
-    if thread_id in [POLICY_TOPIC_ID, HOWTOPLAY_TOPIC_ID, ANNOUNCEMENT_TOPIC_ID]:
-        try:
-            await message.delete()
-        except:
-            pass
+        # Allow admins and owner
+        if member.status in ["administrator", "creator"]:
+            return
+
+        # Delete normal member messages
+        await message.delete()
+
+    except Exception as e:
+        print("Error:", e)
 
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
